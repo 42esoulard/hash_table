@@ -2,7 +2,8 @@
 Just coding a hash table to grasp the concept
 
 **See [Challenge HotRace repository ft. my sad BST map](https://github.com/42esoulard/Challenge-HotRace)**
-/!\ disclaimer: this is just for fun and personnal growth, so I used std::list (which is forbidden in the subject).
+
+- /!\ disclaimer: this redo is just for fun and personnal growth, so I used std::list (which is forbidden in the subject).
 
 
  - The goal is to create an efficient key-value handling algorithm. 
