@@ -6,12 +6,14 @@
 /*   By: esoulard <esoulard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/09 10:41:04 by esoulard          #+#    #+#             */
-/*   Updated: 2021/04/09 12:45:35 by esoulard         ###   ########.fr       */
+/*   Updated: 2021/04/09 14:42:58 by esoulard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 /*
 ** The goal is to create an efficient key-value handling algorithm.
+** did this following the 42 HotRace challenge, for which i did a BST, which was not the 
+** most efficient algo :(
 **
 ** Following this tutorial https://www.geeksforgeeks.org/c-program-hashing-chaining/
 ** and mixing it up with this one https://www.tutorialspoint.com/cplusplus-program-to-implement-hash-tables
@@ -34,12 +36,10 @@ class Pair {
         std::string &getKey()   { return _key; };
         std::string &getVal()   { return _val; };
 
-
     private:
 
         std::string _key;
         std::string _val;
-
 };
 
 class HashTable {
@@ -51,36 +51,33 @@ class HashTable {
             _bucket_list = new std::list<Pair>[SIZE];
         };// constructor
 
-        long int &hashFunction(std::string &key) {
+        long int hashFunction(std::string &key) {
             
             long int hash = 37; // a prime number
             long int prime_a = 71; //another prime number
             
-            for (char &c : key)
-                hash = (hash * prime_a + c) % SIZE;
-           
+            std::string::iterator ite = key.end();
+            for (std::string::iterator c = key.begin(); c != ite; ++c)
+                hash = (hash * prime_a + *c) % SIZE;
+
             return hash;
         }
 
-        void add_entry(char *key, char *value) {
+        void add_entry(std::string &input, size_t eq_pos) {
 
-            std::string s_key(key);
-            long int index = hashFunction(s_key);
+            std::string key = input.substr(0, eq_pos);
+            long int index = hashFunction(key);
 
-            std::list<Pair>::iterator it = get_entry(s_key, index);
-            if (it == _bucket_list[index].end())
+            std::list<Pair>::iterator it = get_entry(key, index);
+            if (it != _bucket_list[index].end())
                 return ;
                 
-            *value = '\0'; //removing the '='
-            ++value;
+            std::string value = input.substr(eq_pos + 1);
 
-            _bucket_list[index].push_back(Pair(std::string(key), std::string(value)));
+            _bucket_list[index].push_back(Pair(key, value));
         }
 
-        std::list<Pair>::iterator &get_entry(std::string &key, long int index) {
-            
-            if (index == -1)
-                index = hashFunction(key);
+        std::list<Pair>::iterator get_entry(std::string &key, long int index) {
 
             std::list<Pair>::iterator it;
             std::list<Pair>::iterator ite = _bucket_list[index].end();
@@ -102,10 +99,24 @@ class HashTable {
             return it;
         }
 
+        void print_entry(std::string &key) {
+
+            long int index = hashFunction(key);    
+            std::list<Pair>::iterator it = get_entry(key, index);
+        
+            if (it != _bucket_list[index].end())
+                std::cout << (*it).getVal() << "\n";
+            else
+                std::cout << key << ": Not found\n";
+            
+            
+        };
+
         void delete_entry(std::string &key) {
             
-            long int index = hashFunction(key);
-            std::list<Pair>::iterator it = get_entry(key, index); 
+            std::string toDel = key.substr(1);
+            long int index = hashFunction(toDel);
+            std::list<Pair>::iterator it = get_entry(toDel, index); 
             
             if (it == _bucket_list[index].end())
                 return ;
@@ -115,7 +126,7 @@ class HashTable {
 
     private:
 
-        // array containing buckets
+        // array containing buckets, each bucket is supposed to hold only one value but can hold a few if theres hash collision
         std::list<Pair>   *_bucket_list; 
 
 
@@ -123,29 +134,30 @@ class HashTable {
 
 int main() {
 
-    HashTable db(SIZE);
-    std::string in_str;
-    char *in_c;
-    char *equal;
+    HashTable                   db(SIZE);
+    std::string                 in_str;
+    std::string::iterator       c;
+    size_t                      equal;
+
+    // std::ios_base::sync_with_stdio(false);
+    // std::cin.tie(NULL);
 
     while (1) {
-        
-        equal = NULL;
 
         std::getline(std::cin, in_str);
         if (!std::cin)
             break ;
 
-        in_c = &in_str[0];
-        if (in_c[0] == '!') 
-            db.delete_entry(&in_str[1]);
-        else if ((equal = strchr(in_c, '=')))
-            db.add_entry(in_c, equal);
+        c = in_str.begin();
+        
+        if (*c == '!') 
+            db.delete_entry(in_str); 
+        else if ((equal = in_str.find('=')) != std::string::npos)
+            db.add_entry(in_str, equal);
         else
-            db.get_entry(in_str);
+            db.print_entry(in_str);
 
-        in_str = std::string("");
-        in_c[0] = '\0';
+        in_str.clear();
     }
     return 0;
 }
